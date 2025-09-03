@@ -13,7 +13,7 @@ tfsbr = None
 
 # Emulator
 #uav_name = "emulated_uav"
-uav_name = "uavteam2"
+uav_name = "uavteam8"
 camera_name = "camera"
 
 def send_tf_camera():
