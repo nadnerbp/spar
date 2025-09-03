@@ -11,7 +11,9 @@ from geometry_msgs.msg import PoseStamped, TransformStamped
 tfbr = None
 tfsbr = None
 
-uav_name = "uavusr"
+# Emulator
+#uav_name = "emulated_uav"
+uav_name = "uavteam2"
 camera_name = "camera"
 
 def send_tf_camera():
@@ -24,7 +26,7 @@ def send_tf_camera():
 
 	t.transform.translation.x = 0.0
 	t.transform.translation.y = 0.0
-	t.transform.translation.z = -0.05
+	t.transform.translation.z = -0.216
 	q = tf_conversions.transformations.quaternion_from_euler(0, math.pi, 0)
 	t.transform.rotation.x = q[0]
 	t.transform.rotation.y = q[1]
