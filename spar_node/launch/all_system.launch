@@ -1,6 +1,4 @@
 <launch>
-    <!-- Core -->
-    <node pkg="roscore" type="roscore" name="roscore" required="true"/>
 
     <!-- TF2 static frames -->
     <node pkg="spar_node" type="tf2_frames.py" name="tf2_frames" output="screen"/>
@@ -17,9 +15,4 @@
     <!-- Breadcrumb planner -->
     <include file="$(find breadcrumb)/launch/breadcrumb.launch"/>
 
-    <!-- Waypoint Guidance -->
-    <node pkg="spar_node" type="demo_wp_roi.py" name="demo_wp_roi" output="screen"/>
-
-    <!-- Optional: RViz -->
-    <!-- <node pkg="rviz" type="rviz" name="rviz" args="-d $(find spar_node)/rviz/config.rviz"/> -->
 </launch>
