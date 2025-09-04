@@ -1,0 +1,32 @@
+#!/usr/bin/env python3
+import rospy
+from vision_msgs.msg import ObjectHypothesisWithPose
+from geometry_msgs.msg import Pose, Point, Quaternion
+
+def fake_roi_publisher():
+    rospy.init_node('fake_roi_publisher', anonymous=True)
+    
+    # Publisher for ROI detections
+    pub = rospy.Publisher('/target_detection/roi', ObjectHypothesisWithPose, queue_size=10)
+    rate = rospy.Rate(0.2)  # publish every 5 seconds
+    
+    while not rospy.is_shutdown():
+        msg = ObjectHypothesisWithPose()
+        
+        # Choose ROI ID (demo_wp_roi reacts to 101 and 102 as payload targets)
+        msg.id = 101   # Try 102 for second payload
+        
+        # Place the target a couple of metres in front of the UAV
+        msg.pose.pose.position = Point(x=1.5, y=0.5, z=0.0)
+        msg.pose.pose.orientation = Quaternion(x=0.0, y=0.0, z=0.0, w=1.0)
+        
+        rospy.loginfo(f"Publishing fake ROI target with ID {msg.id}")
+        pub.publish(msg)
+        
+        rate.sleep()
+
+if __name__ == '__main__':
+    try:
+        fake_roi_publisher()
+    except rospy.ROSInterruptException:
+        pass
