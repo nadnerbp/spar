@@ -1,0 +1,22 @@
+<launch>
+
+    <!-- TF2 static frames -->
+    <node pkg="spar_node" type="tf2_frames_emulator.py" name="tf2_frames_emulator" output="screen"/>
+
+    <!-- TF2 combined (ROI broadcaster) -->
+    <node pkg="spar_node" type="tf2_combined.py" name="tf2_combined" output="screen"/>
+
+    #<!-- Pose estimator -->
+    #<node pkg="spar_node" type="pose_estimator.py" name="pose_estimator" output="screen"/>
+
+    <!-- Servo control -->
+    <node pkg="servo" type="servo_control.py" name="servo_control" output="screen"/>
+
+    <!-- Pose Estimator Launch file -->
+    <include file="$(find egh450_target_solvepnp)/launch/pose_estimator.launch"/>
+
+    <!-- Breadcrumb planner -->
+    <include file="$(find breadcrumb)/launch/breadcrumb.launch"/>
+
+
+</launch>
