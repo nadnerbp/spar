@@ -477,7 +477,10 @@ class Guidance():
 	def inspect_roi(self, msg_in):
 		# Set our flag that we are performing the diversion
 		self.performing_roi = True
-
+		if self.breadcrumbMode:
+    		self.resume_index = self.breadcrumbWPSnextIndex - 1
+		else:
+   			self.resume_index = self.waypoint_counter - 1
 		# Extracting message data from new message type
 		msg_in = msg_in.pose
 
@@ -525,11 +528,13 @@ class Guidance():
 			# Something went wrong, cancel out of guidance!
 			rospy.signal_shutdown("cancelled")
 			return
-
-		# "waypoint_counter" represents the "next waypoint"
-		# "waypoint_counter - 1" represents the "current waypoint"
-		rospy.loginfo("Resuming flight plan from waypoint %i!" % (self.waypoint_counter - 1))
-		self.send_wp(self.waypoints[self.waypoint_counter - 1])
+		# After ROI diversion, instead of always resuming from main waypoint:
+		if self.breadcrumbMode:
+   			rospy.loginfo(f"Resuming breadcrumb path at index {self.resume_index}")
+   			self.send_wp(self.breadcrumbWPS[self.resume_index])
+		else:
+    		rospy.loginfo(f"Resuming flight plan from waypoint {self.resume_index}")
+    		self.send_wp(self.waypoints[self.resume_index])
 		# Unset our flag that we are performing a diversion
 		# to allow the waypoint timer to take back over
 		self.performing_roi = False
