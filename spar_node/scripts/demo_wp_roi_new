@@ -472,67 +472,67 @@ class Guidance():
             	# call landing function 
 
 
-    # This function will fire whenever a ROI pose message is sent
-    # It is also responsible for handling the ROI "inspection task"
-    def inspect_roi(self, msg_in):
-        # Set our flag that we are performing the diversion
-        self.performing_roi = True
+	# This function will fire whenever a ROI pose message is sent
+	# It is also responsible for handling the ROI "inspection task"
+	def inspect_roi(self, msg_in):
+		# Set our flag that we are performing the diversion
+		self.performing_roi = True
 
-        if self.breadcrumbMode:
-            self.resume_index = self.breadcrumbWPSnextIndex - 1
-        else:
-            self.resume_index = self.waypoint_counter - 1
+		# Extracting message data from new message type
+		msg_in = msg_in.pose
 
-        # Extracting message data from new message type
-        msg_in = msg_in.pose
+		rospy.loginfo("Starting diversion to ROI...")
+		# Cancel the current goal (if there is one)
+		self.spar_client.cancel_goal()
+		# Record our current location so we can return to it later
+		start_location = self.current_location
+		# XXX:	It would also be a good idea to capture "current yaw" from
+		#		the pose to maintain that throughout a diversion
 
-        rospy.loginfo("Starting diversion to ROI...")
-        # Cancel the current goal (if there is one)
-        self.spar_client.cancel_goal()
-        # Record our current location so we can return to it later
-        start_location = self.current_location
+		# Set the "diversion waypoint" (at yaw zero)
+		# dwp = [msg_in.pose.position.x, msg_in.pose.position.y, msg_in.pose.position.z, 0.0]
+		dwp = [msg_in.pose.position.x, msg_in.pose.position.y + 0.05, 0.7, 0.0] #self.current_location.z, 0.0]
+		# Set the "return waypoint" (at yaw zero)
+		rwp = [self.current_location.x, self.current_location.y, self.current_location.z, 0.0]
 
-        # Set the "diversion waypoint" (at yaw zero)
-        dwp = [msg_in.pose.position.x,
-               msg_in.pose.position.y + 0.05,
-               0.7, 0.0]
+		# XXX: Could pause here for a moment with ( "rospy.sleep(...)" ) to make sure the UAV stops correctly
 
-        # Set the "return waypoint" (at yaw zero)
-        rwp = [self.current_location.x,
-               self.current_location.y,
-               self.current_location.z, 0.0]
+		self.send_wp(dwp)
+		self.spar_client.wait_for_result()
+		if self.spar_client.get_state() != GoalStatus.SUCCEEDED:
+			# Something went wrong, cancel out of guidance!
+			rospy.signal_shutdown("cancelled")
+			return
 
-        self.send_wp(dwp)
-        self.spar_client.wait_for_result()
-        if self.spar_client.get_state() != GoalStatus.SUCCEEDED:
-            rospy.signal_shutdown("cancelled")
-            return
+		rospy.loginfo("Reached diversion ROI!")
+		# CODE FOR HOVER AND PAYLOAD DEPLOYMENT
 
-        rospy.loginfo("Reached diversion ROI!")
-        rospy.sleep(rospy.Duration(6))
+		rospy.sleep(rospy.Duration(6))
+		
+		#self.payload_id = UInt8()
+		self.payload_id = UInt8(self.payload_id)
+		rospy.loginfo(f"Sending payload deployment {self.payload_id.data}")
+		self.pub_payload.publish(self.payload_id.data)
+		# 2 seconds to deploy payload
+		# NOTE THIS IS TO BE REPLACED WITH A CONFIRMATION MESSAGE FROM PAYLOAD DEPLOYMENT
+		rospy.sleep(rospy.Duration(2))
+		rospy.loginfo("Returning to flight plan...")
+		
+		
+		self.send_wp(start_location)
+		self.spar_client.wait_for_result()
+		if self.spar_client.get_state() != GoalStatus.SUCCEEDED:
+			# Something went wrong, cancel out of guidance!
+			rospy.signal_shutdown("cancelled")
+			return
 
-        self.payload_id = UInt8(self.payload_id)
-        rospy.loginfo(f"Sending payload deployment {self.payload_id.data}")
-        self.pub_payload.publish(self.payload_id.data)
-        rospy.sleep(rospy.Duration(2))
-
-        rospy.loginfo("Returning to flight plan...")
-        self.send_wp(start_location)
-        self.spar_client.wait_for_result()
-        if self.spar_client.get_state() != GoalStatus.SUCCEEDED:
-            rospy.signal_shutdown("cancelled")
-            return
-
-        # After ROI diversion, resume correctly
-        if self.breadcrumbMode:
-            rospy.loginfo(f"Resuming breadcrumb path at index {self.resume_index}")
-            self.send_wp(self.breadcrumbWPS[self.resume_index])
-        else:
-            rospy.loginfo(f"Resuming flight plan from waypoint {self.resume_index}")
-            self.send_wp(self.waypoints[self.resume_index])
-
-        # Unset our flag that we are performing a diversion
-        self.performing_roi = False
+		# "waypoint_counter" represents the "next waypoint"
+		# "waypoint_counter - 1" represents the "current waypoint"
+		rospy.loginfo("Resuming flight plan from waypoint %i!" % (self.waypoint_counter - 1))
+		self.send_wp(self.waypoints[self.waypoint_counter - 1])
+		# Unset our flag that we are performing a diversion
+		# to allow the waypoint timer to take back over
+		self.performing_roi = False
 
 	# #Aruco marker detection handling
 	# def detection_aruco(self,msg_in):
@@ -853,5 +853,3 @@ if __name__ == '__main__':
 		pass
 
 	print('Node Closed')
-
-
