@@ -517,8 +517,9 @@ class Guidance():
 		# NOTE THIS IS TO BE REPLACED WITH A CONFIRMATION MESSAGE FROM PAYLOAD DEPLOYMENT
 		rospy.sleep(rospy.Duration(2))
 		rospy.loginfo("Returning to flight plan...")
-
-		self.send_wp(rwp)
+		
+		
+		self.send_wp(start_location)
 		self.spar_client.wait_for_result()
 		if self.spar_client.get_state() != GoalStatus.SUCCEEDED:
 			# Something went wrong, cancel out of guidance!
